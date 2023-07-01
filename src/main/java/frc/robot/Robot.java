@@ -17,12 +17,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
- * The VM is configured to automatically run this class, and to call the functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the name of this class or
- * the package after creating this project, you must also update the build.gradle file in the
+ * The VM is configured to automatically run this class, and to call the
+ * functions corresponding to
+ * each mode, as described in the TimedRobot documentation. If you change the
+ * name of this class or
+ * the package after creating this project, you must also update the
+ * build.gradle file in the
  * project.
  */
 public class Robot extends TimedRobot {
@@ -34,12 +39,11 @@ public class Robot extends TimedRobot {
   NoUMotor brMotor = new NoUMotor(4);
 
   NoUServo catapult = new NoUServo(1);
-  
+
   Timer rsltimer = new Timer();
 
-  CommandXboxController controller = new CommandXboxController(0); 
-  
-  
+  CommandXboxController controller = new CommandXboxController(0);
+
   @Override
   public void robotInit() {
     catapult.setAngle(120);
@@ -48,28 +52,33 @@ public class Robot extends TimedRobot {
     blMotor.setInverted(true);
     brMotor.setInverted(true);
   }
-  
+
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
   }
-  
+
   @Override
-  public void autonomousInit() {}
-  
+  public void autonomousInit() {
+    new InstantCommand(() -> catapult.setAngle(180)).andThen(new WaitCommand(0.5))
+        .andThen(new InstantCommand(() -> catapult.setAngle(120))).andThen(new InstantCommand(() -> drive(0, -0.75, 0)))
+        .andThen(new WaitCommand(3)).andThen(new InstantCommand(() -> drive(0, 0, 0))).schedule();
+  }
+
   @Override
-  public void autonomousPeriodic() {}
-  
+  public void autonomousPeriodic() {
+  }
+
   @Override
   public void teleopInit() {
     rsltimer.restart();
-    
+
     DummySubsystem dummy = new DummySubsystem();
-    controller.a().onTrue(new InstantCommand(() -> catapult.setAngle(60), dummy));
+    controller.rightBumper().onTrue(new InstantCommand(() -> catapult.setAngle(60), dummy));
     controller.b().onTrue(new InstantCommand(() -> catapult.setAngle(180), dummy));
-    controller.a().or(controller.b()).onFalse(new RunCommand(() -> {
+    controller.rightBumper().or(controller.b()).onFalse(new RunCommand(() -> {
       if (catapult.getAngle() < 120) {
-          catapult.setAngle(catapult.getAngle() + 2);
+        catapult.setAngle(catapult.getAngle() + 2);
       } else {
         catapult.setAngle(120);
       }
@@ -79,7 +88,8 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     // RSL
-    if (rsltimer.advanceIfElapsed(1)) g2.write(1^g2.read());
+    if (rsltimer.advanceIfElapsed(1))
+      g2.write(1 ^ g2.read());
 
     // read joysticks
     double xval = MathUtil.applyDeadband(controller.getLeftX(), 0.15);
@@ -88,7 +98,12 @@ public class Robot extends TimedRobot {
     yval = Math.copySign(Math.pow(yval, 2), yval);
     xval = xval * (1 - 0.35) + (Math.abs(xval) > 0.03 ? Math.copySign(0.35, xval) : 0.0);
     yval = yval * (1 - 0.35) + (Math.abs(yval) > 0.03 ? Math.copySign(0.35, yval) : 0.0);
+    double rotation = controller.getRawAxis(2);
 
+    drive(xval, yval, rotation);
+  }
+
+  void drive(double xval, double yval, double rotation) {
     // convert to polar coordinates
     double theta = Math.atan2(yval, xval);
     double magnitude = Math.hypot(xval, yval);
@@ -103,14 +118,13 @@ public class Robot extends TimedRobot {
     youtl *= scalar;
     double xoutr = -xoutl;
     double youtr = -youtl;
-    
-    double rotation = controller.getRawAxis(2);
+
     rotation = Math.copySign(Math.max(Math.abs(rotation) - Math.max(Math.abs(xoutl), Math.abs(youtl)), 0), rotation);
 
-    flMotor.set(xoutl+rotation);
-    frMotor.set(youtl+rotation);
-    blMotor.set(youtr+rotation);
-    brMotor.set(xoutr+rotation);
+    flMotor.set(xoutl + rotation);
+    frMotor.set(youtl + rotation);
+    blMotor.set(youtr + rotation);
+    brMotor.set(xoutr + rotation);
   }
 
   @Override
@@ -120,17 +134,22 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+  }
 
   @Override
-  public void testInit() {}
+  public void testInit() {
+  }
 
   @Override
-  public void testPeriodic() {}
+  public void testPeriodic() {
+  }
 
   @Override
-  public void simulationInit() {}
+  public void simulationInit() {
+  }
 
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+  }
 }
