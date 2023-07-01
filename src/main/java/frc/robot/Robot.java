@@ -60,9 +60,13 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
-    new InstantCommand(() -> catapult.setAngle(180)).andThen(new WaitCommand(0.5))
-        .andThen(new InstantCommand(() -> catapult.setAngle(120))).andThen(new InstantCommand(() -> drive(0, -0.75, 0)))
-        .andThen(new WaitCommand(3)).andThen(new InstantCommand(() -> drive(0, 0, 0))).schedule();
+    new InstantCommand(() -> catapult.setAngle(180))
+        .andThen(new WaitCommand(0.5))
+        .andThen(new InstantCommand(() -> catapult.setAngle(120)))
+        .andThen(new InstantCommand(() -> drive(0, -0.75, 0)))
+        .andThen(new WaitCommand(3))
+        .andThen(new InstantCommand(() -> drive(0, 0, 0)))
+        .schedule();
   }
 
   @Override
@@ -74,9 +78,9 @@ public class Robot extends TimedRobot {
     rsltimer.restart();
 
     DummySubsystem dummy = new DummySubsystem();
-    controller.rightBumper().onTrue(new InstantCommand(() -> catapult.setAngle(60), dummy));
+    controller.a().onTrue(new InstantCommand(() -> catapult.setAngle(60), dummy));
     controller.b().onTrue(new InstantCommand(() -> catapult.setAngle(180), dummy));
-    controller.rightBumper().or(controller.b()).onFalse(new RunCommand(() -> {
+    controller.a().or(controller.b()).onFalse(new RunCommand(() -> {
       if (catapult.getAngle() < 120) {
         catapult.setAngle(catapult.getAngle() + 2);
       } else {
