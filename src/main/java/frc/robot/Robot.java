@@ -78,6 +78,16 @@ public class Robot extends TimedRobot {
     rsltimer.restart();
 
     DummySubsystem dummy = new DummySubsystem();
+
+    controller.button(8).onTrue(new InstantCommand(() -> catapult.setAngle(60), dummy));
+    controller.button(8).or(controller.b()).onFalse(new RunCommand(() -> {
+      if (catapult.getAngle() < 120) {
+        catapult.setAngle(catapult.getAngle() + 2);
+      } else {
+        catapult.setAngle(120);
+      }
+    }, dummy).until(() -> catapult.getAngle() == 120));
+
     controller.a().onTrue(new InstantCommand(() -> catapult.setAngle(60), dummy));
     controller.b().onTrue(new InstantCommand(() -> catapult.setAngle(180), dummy));
     controller.a().or(controller.b()).onFalse(new RunCommand(() -> {
@@ -102,7 +112,7 @@ public class Robot extends TimedRobot {
     yval = Math.copySign(Math.pow(yval, 2), yval);
     xval = xval * (1 - 0.35) + (Math.abs(xval) > 0.03 ? Math.copySign(0.35, xval) : 0.0);
     yval = yval * (1 - 0.35) + (Math.abs(yval) > 0.03 ? Math.copySign(0.35, yval) : 0.0);
-    double rotation = controller.getRawAxis(2);
+    double rotation = Math.copySign(Math.min(Math.abs(controller.getRawAxis(2)), 0.6),controller.getRawAxis(2));
 
     drive(xval, yval, rotation);
   }
